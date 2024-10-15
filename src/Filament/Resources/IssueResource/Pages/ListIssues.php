@@ -25,7 +25,6 @@ class ListIssues extends ManageRecords
                 ->label(trans('filament-issues::messages.actions.refresh.label'))
                 ->requiresConfirmation()
                 ->icon('heroicon-o-arrow-down-circle')
-                ->label('Refresh')
                 ->action(function (){
                     FilamentIssues::refresh();
 
