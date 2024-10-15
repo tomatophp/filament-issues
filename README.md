@@ -8,6 +8,37 @@
 
 Manage your GitHub issues from your FilamentPHP panel and share issues with others
 
+## Features
+
+- [x] Fetch issues from GitHub
+- [x] Filter issues by labels
+- [x] Filter issues by assignees
+- [x] Filter issues by author
+- [x] Filter issues by created date
+- [x] Filter issues by repository
+- [x] Issues UI Component
+- [x] Issues Card Component
+- [x] Refresh issues command
+- [ ] Manage Issues from FilamentPHP panel
+- [ ] Share Issues with others
+- [ ] Filter By Milestones
+- [ ] Filter By Projects
+- [ ] Filter By Reactions
+- [ ] Add comments to issues
+- [ ] Add labels to issues
+- [ ] Add assignees to issues
+- [ ] Add milestones to issues
+- [ ] Add projects to issues
+- [ ] Add reactions to issues
+- [ ] Integration With Jira
+- [ ] Integration With Filament PMS `coming soon`
+
+## Screenshots
+
+![Issues Dashboard](https://raw.githubusercontent.com/tomatophp/filament-issues/master/arts/issues.png)
+![Issues Filters](https://raw.githubusercontent.com/tomatophp/filament-issues/master/arts/issues-filters.png)
+![Issues Component](https://raw.githubusercontent.com/tomatophp/filament-issues/master/arts/issues-component.png)
+
 ## Installation
 
 ```bash
