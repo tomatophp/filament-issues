@@ -23,8 +23,7 @@ php artisan filament-issues:install
 if you are not using this package as a plugin please register the plugin on `/app/Providers/Filament/AdminPanelProvider.php`
 
 ```php
-->plugin(\TomatoPHP\FilamentIssues\FilamentIssuesPlugin::make()
-)
+->plugin(\TomatoPHP\FilamentIssues\FilamentIssuesPlugin::make())
 ```
 
 now you need to publish the config file `filament-issues`
