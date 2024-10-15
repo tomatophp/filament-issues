@@ -88,13 +88,13 @@ after install you will find a refresh button on the issues resource you can clic
 
 you can use this Issues on public by just use this component
 
-```bladehtml
+```html
 <x-filament-issues />
 ```
 
 or you can use direct issue card by use this component
 
-```bladehtml
+```html
 <x-filament-issues-card :issue="$issue" />
 ```
 
