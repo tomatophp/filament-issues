@@ -61,6 +61,28 @@ return [
 ]
 ```
 
+now on your `services.php` config add this
+
+```php
+'github' => [
+    'username' => env('GITHUB_USERNAME'),
+    'token' => env('GITHUB_TOKEN'),
+],
+```
+
+and on your `.env` file add this
+
+```env
+GITHUB_USERNAME=your-github-username
+GITHUB_TOKEN=your-github-token
+```
+
+now clear your config
+
+```bash
+php artisan config:cache
+```
+
 after install you will find a refresh button on the issues resource you can click it the fetch your issues from GitHub make sure your queue is running
 
 ## Usage
