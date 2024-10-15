@@ -3,6 +3,7 @@
 namespace TomatoPHP\FilamentIssues\Filament\Resources\IssueResource\Pages;
 
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Pages\ManageRecords;
 use TomatoPHP\FilamentIssues\Facades\FilamentIssues;
@@ -21,11 +22,19 @@ class ListIssues extends ManageRecords
     {
         return [
             Actions\Action::make('refresh')
+                ->label(trans('filament-issues::messages.actions.refresh.label'))
                 ->requiresConfirmation()
                 ->icon('heroicon-o-arrow-down-circle')
                 ->label('Refresh')
                 ->action(function (){
                     FilamentIssues::refresh();
+
+                    Notification::make()
+                        ->title(trans('filament-issues::messages.actions.refresh.title'))
+                        ->body(trans('filament-issues::messages.actions.refresh.body'))
+                        ->icon('heroicon-o-check-circle')
+                        ->success()
+                        ->send();
                 }),
         ];
     }
