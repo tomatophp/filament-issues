@@ -2,19 +2,20 @@
 
 declare(strict_types=1);
 
-namespace TomatoPHP\FilamentIssues\DataTransferObjects;
+namespace TomatoPHP\FilamentIssues\Models;
 
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Livewire\Wireable;
 
-final readonly class Label implements Wireable
+class Label extends Model
 {
-    public function __construct(
-        public string $name,
-        public string $color,
-    ) {
-        //
-    }
+    protected $table = 'git_labels';
+
+    protected $fillable = [
+        'name',
+        'color',
+    ];
 
     public function toLivewire()
     {

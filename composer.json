@@ -10,7 +10,7 @@
     "license": "MIT",
     "autoload": {
         "psr-4": {
-            "Tomatophp\\FilamentIssues\\": "src/"
+            "TomatoPHP\\FilamentIssues\\": "src/"
         }
     },
     "autoload-dev": {

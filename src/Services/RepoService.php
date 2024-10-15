@@ -12,18 +12,40 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use TomatoPHP\FilamentIssues\Models\Org;
 
 final readonly class RepoService
 {
     public function reposToCrawl(): Collection
     {
-        return collect(config('repos.repos'))
+        return collect(config('filament-issues.repos'))
             ->merge($this->fetchReposFromOrgs())
-            ->flatMap(function (array $repoNames, string $owner): array {
-                return Arr::map(
-                    $repoNames,
-                    static fn (string $repoName): Repository => new Repository($owner, $repoName)
-                );
+            ->flatMap(function (array $repoNames, string $owner): Collection {
+                foreach ($repoNames as $repoName){
+                    $org = Org::query()->where('name', $owner)->first();
+                    if(!$org){
+                        $org = Org::query()->create([
+                            'name' => $owner,
+                            'last_update' => now()
+                        ]);
+                    }
+
+                    $org = $org->id;
+
+                    $repo = \TomatoPHP\FilamentIssues\Models\Repository::query()
+                        ->where('owner_id', $org)
+                        ->where('name', $repoName)
+                        ->exists();
+
+                    if(!$repo){
+                        $repo = new \TomatoPHP\FilamentIssues\Models\Repository();
+                        $repo->owner_id = $org;
+                        $repo->name = $repoName;
+                        $repo->save();
+                    }
+                }
+
+                return \TomatoPHP\FilamentIssues\Models\Repository::all();
             });
     }
 
@@ -102,36 +124,46 @@ final readonly class RepoService
 
     private function fetchReposFromOrgs(): Collection
     {
-        return collect(config('repos.orgs'))
+        return collect(config('filament-issues.orgs'))
             ->mapWithKeys(fn (string $org): array => [$org => $this->fetchReposFromOrg($org)]);
     }
 
     /**
      * Fetch all the crawlable repos for a GitHub organization.
      */
-    private function fetchReposFromOrg(string $org): array
+    private function fetchReposFromOrg(string $org): ?array
     {
-        return Cache::remember(
-            key: 'repos.orgs.'.$org,
-            ttl: now()->addWeek(),
-            callback: function () use ($org): array {
-                $client = app(GitHub::class)->client();
-                $page = 1;
+        $checkExistsOrg = Org::query()->where('name', $org)->exists();
+        if(!$checkExistsOrg){
+            $owner = Org::query()->create([
+                'name' => $org,
+                'last_update' => now()
+            ]);
 
-                $repos = collect();
+            $client = app(GitHub::class)->client();
+            $page = 1;
 
-                while ($result = $client->get("orgs/{$org}/repos", ['per_page' => 100, 'type' => 'sources', 'page' => $page])->json()) {
-                    $repoNames = collect($result)
-                        ->reject(fn (array $repo): bool => $this->repoIsArchived($repo))
-                        ->pluck('name');
+            $repos = collect();
 
-                    $repos->push(...$repoNames);
+            while ($result = $client->get("orgs/{$org}/repos", ['per_page' => 100, 'type' => 'sources', 'page' => $page])->json()) {
+                $repoNames = collect($result)
+                    ->reject(function (array $repo) use ($owner){
+                        return ($this->repoIsArchived($repo) || \TomatoPHP\FilamentIssues\Models\Repository::query()
+                                ->where('owner_id', $owner->id)
+                                ->where('name', $repo['name'])
+                                ->exists());
+                    })
+                    ->pluck('name');
 
-                    $page++;
-                }
+                $repos->push(...$repoNames);
 
-                return $repos->all();
+                $page++;
             }
-        );
+
+            return $repos->all();
+        }
+        else {
+            return Org::query()->where('name', $org)->first()?->repositories->pluck('name')->toArray();
+        }
     }
 }

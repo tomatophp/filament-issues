@@ -2,18 +2,28 @@
 
 declare(strict_types=1);
 
-namespace TomatoPHP\FilamentIssues\DataTransferObjects;
+namespace TomatoPHP\FilamentIssues\Models;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Livewire\Wireable;
 
-final readonly class IssueOwner implements Wireable
+class IssueOwner extends Model
 {
-    public function __construct(
-        public string $name,
-        public string $url,
-        public string $profilePictureUrl,
-    ) {
-        //
+    protected $table = 'git_issue_owners';
+
+    protected $fillable = [
+        'name',
+        'url',
+        'profilePictureUrl',
+    ];
+
+    /**
+     * @return HasMany
+     */
+    public function issues(): HasMany
+    {
+        return $this->hasMany(Issue::class);
     }
 
     public function toLivewire()

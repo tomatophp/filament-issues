@@ -1,21 +1,20 @@
 <?php
 
-declare(strict_types=1);
+namespace TomatoPHP\FilamentIssues\Models;
 
-namespace TomatoPHP\FilamentIssues\DataTransferObjects;
-
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Livewire\Wireable;
 
-final readonly class Reaction implements Wireable
+class Reaction extends Model
 {
-    public function __construct(
-        public string $content,
-        public int $count,
-        public string $emoji,
-    ) {
-        //
-    }
+    protected $table = 'git_reactions';
+
+    protected $fillable = [
+        'content',
+        'count',
+        'emoji',
+    ];
 
     public function toLivewire()
     {

@@ -5,6 +5,8 @@ namespace TomatoPHP\FilamentIssues;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use TomatoPHP\FilamentIssues\Views\Components\IssueCard;
+use TomatoPHP\FilamentIssues\Views\Components\Issues;
 
 
 class FilamentIssuesServiceProvider extends ServiceProvider
@@ -47,9 +49,14 @@ class FilamentIssuesServiceProvider extends ServiceProvider
            __DIR__.'/../resources/lang' => base_path('lang/vendor/filament-issues'),
         ], 'filament-issues-lang');
 
-        //Register Routes
-        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
+        $this->app->bind('filament-issues', function () {
+            return new \TomatoPHP\FilamentIssues\Services\FilamentIssuesServices();
+        });
 
+        $this->loadViewComponentsAs('filament', [
+            IssueCard::class,
+            Issues::class
+        ]);
     }
 
     public function boot(): void
