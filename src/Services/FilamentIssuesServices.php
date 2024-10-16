@@ -7,11 +7,41 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use TomatoPHP\FilamentIssues\Exceptions\GitHubRateLimitException;
 use TomatoPHP\FilamentIssues\Models\Issue;
+use TomatoPHP\FilamentIssues\Models\IssueOwner;
+use TomatoPHP\FilamentIssues\Models\Label;
 use TomatoPHP\FilamentIssues\Models\Org;
+use TomatoPHP\FilamentIssues\Models\Reaction;
 use TomatoPHP\FilamentIssues\Models\Repository;
 
 class FilamentIssuesServices
 {
+    private array $repos = [];
+
+    public function register(string|array|\Closure $repo): void
+    {
+        if($repo instanceof \Closure){
+            $repo = call_user_func($repo);
+        }
+
+        if(is_array($repo)){
+            foreach ($repo as $r){
+                $this->register($r);
+            }
+        }
+        else {
+            $repo = str($repo)->explode("/");
+            if(!isset($this->repos[$repo[0]])){
+                $this->repos[$repo[0]] = [];
+            }
+            $this->repos[$repo[0]][] = $repo[1];
+        }
+    }
+
+    public function getRepos(): array
+    {
+        return $this->repos;
+    }
+
     /**
      * @return RepoService
      */
@@ -97,5 +127,15 @@ class FilamentIssuesServices
     public function refresh(): void
     {
         $this->load();
+    }
+
+    public function clear(): void
+    {
+        Issue::query()->delete();
+        Repository::query()->delete();
+        Org::query()->delete();
+        IssueOwner::query()->delete();
+        Label::query()->delete();
+        Reaction::query()->delete();
     }
 }

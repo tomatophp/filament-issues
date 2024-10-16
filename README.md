@@ -19,6 +19,8 @@ Manage your GitHub issues from your FilamentPHP panel and share issues with othe
 - [x] Issues UI Component
 - [x] Issues Card Component
 - [x] Refresh issues command
+- [x] Register Repo from Service Provider
+- [x] Integration with Filament CMS Builder
 - [ ] Manage Issues from FilamentPHP panel
 - [ ] Share Issues with others
 - [ ] Filter By Milestones
@@ -135,6 +137,44 @@ we create a predefined command to refresh your issues by use this command
 
 ```bash
 php artisan filament-issues:refresh
+```
+
+## Register Repo using Facade
+
+you can register your repo by use this code on your `AppServiceProvider.php`
+
+```php
+public function boot() 
+{
+    FilamentIssues::register([
+        'tomatophp/filament-issues',
+        'tomatophp/filament-cms',
+        'tomatophp/filament-pms',
+    ]);
+}
+```
+
+
+## Integration With Filament CMS Builder
+
+you can use this package with [Filament CMS Builder](https://www.github.com/tomatophp/filament-cms) by use this code on your `AppServiceProvider.php`
+
+```php
+public function boot() 
+{
+    FilamentIssues::register(
+        fn() => Post::query()
+            ->where('type', 'open-source')
+            ->pluck('meta_url')
+            ->map(
+                fn($item) => str($item)
+                    ->remove('https://github.com/')
+                    ->remove('https://www.github.com/')
+                    ->toString()
+            )
+            ->toArray()
+   );
+} 
 ```
 
 ## Publish Assets

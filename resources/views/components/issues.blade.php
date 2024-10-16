@@ -61,7 +61,9 @@
         @endforeach
     </div>
 
-    {!! $issues->links() !!}
+    <div class="my-4">
+        {!! $issues->links() !!}
+    </div>
 
     <script>
         const dropdown = document.getElementById("sort");

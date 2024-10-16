@@ -16,6 +16,9 @@ use TomatoPHP\FilamentIssues\Services\RepoService;
  * @method static void refresh()
  * @method static array fetchRepo(Repository $repo)
  * @method static Builder publicIssues(Request $request)
+ * @method void register(string|array|\Closure $repo)
+ * @method array getRepos()
+ * @method void clear()
  */
 class FilamentIssues extends Facade
 {

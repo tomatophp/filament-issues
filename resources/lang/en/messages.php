@@ -21,6 +21,11 @@ return [
             "label" =>  "Refresh Issues",
             "title" => "Issues Refreshed",
             "body" => "Issues have been refreshed in the background successfully."
+        ],
+        "clean" => [
+            "label" => "Clean Issues",
+            "title" => "Issues Cleaned",
+            "body" => "Issues have been cleaned successfully."
         ]
     ]
 ];

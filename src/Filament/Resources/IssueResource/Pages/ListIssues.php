@@ -35,6 +35,21 @@ class ListIssues extends ManageRecords
                         ->success()
                         ->send();
                 }),
+            Actions\Action::make('clean')
+                ->label(trans('filament-issues::messages.actions.clean.label'))
+                ->requiresConfirmation()
+                ->icon('heroicon-o-trash')
+                ->color('danger')
+                ->action(function (){
+                    FilamentIssues::clear();
+
+                    Notification::make()
+                        ->title(trans('filament-issues::messages.actions.clean.title'))
+                        ->body(trans('filament-issues::messages.actions.clean.body'))
+                        ->icon('heroicon-o-check-circle')
+                        ->success()
+                        ->send();
+                }),
         ];
     }
 

@@ -12,13 +12,14 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use TomatoPHP\FilamentIssues\Facades\FilamentIssues;
 use TomatoPHP\FilamentIssues\Models\Org;
 
 final readonly class RepoService
 {
     public function reposToCrawl(): Collection
     {
-        return collect(config('filament-issues.repos'))
+        return collect(array_merge(config('filament-issues.repos'), FilamentIssues::getRepos()))
             ->merge($this->fetchReposFromOrgs())
             ->flatMap(function (array $repoNames, string $owner): Collection {
                 foreach ($repoNames as $repoName){
