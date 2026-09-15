@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 namespace TomatoPHP\FilamentIssues\Services;
 
-use TomatoPHP\FilamentIssues\Clients\GitHub;
-use TomatoPHP\FilamentIssues\Exceptions\GitHubRateLimitException;
 use Carbon\Carbon;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
+use TomatoPHP\FilamentIssues\Clients\GitHub;
+use TomatoPHP\FilamentIssues\Exceptions\GitHubRateLimitException;
 use TomatoPHP\FilamentIssues\Jobs\FetchIssuesByRepo;
 use TomatoPHP\FilamentIssues\Models\Issue;
 use TomatoPHP\FilamentIssues\Models\IssueOwner;
@@ -20,24 +18,18 @@ use TomatoPHP\FilamentIssues\Models\Repository;
 
 final readonly class IssueService
 {
-
-
-    /**
-     * @return array
-     */
     public function getAll(): array
     {
-        return app(RepoService::class)
-            ->reposToCrawl()
-            ->flatMap(fn (Repository $repo) => dispatch(new FetchIssuesByRepo($repo)))
-            ->toArray();
+        $repositories = app(RepoService::class)->reposToCrawl();
+
+        foreach ($repositories as $repo) {
+            dispatch(new FetchIssuesByRepo($repo));
+        }
+
+        return $repositories->all();
     }
 
-
     /**
-     * @param Repository $repo
-     * @param bool $forceRefresh
-     * @return array
      * @throws GitHubRateLimitException
      */
     public function getIssuesForRepo(Repository $repo, bool $forceRefresh = false): array
@@ -58,24 +50,23 @@ final readonly class IssueService
 
         $owner = $this->getIssueOwner($fetchedIssue);
 
-        if(!$issue){
-            $issue = new Issue();
+        if (! $issue) {
+            $issue = new Issue;
             $issue->issue_id = $fetchedIssue['id'];
             $issue->repo_id = $repo->id;
             $issue->number = $fetchedIssue['number'];
             $issue->repoName = $repo->repo;
-            $issue->repoUrl = 'https://github.com/'.$repo->repo;
+            $issue->repoUrl = 'https://github.com/' . $repo->repo;
             $issue->title = $fetchedIssue['title'];
             $issue->url = $fetchedIssue['html_url'];
             $issue->body = $fetchedIssue['body'];
-            $issue->commentCount = $fetchedIssue['comments']??0;
+            $issue->commentCount = $fetchedIssue['comments'] ?? 0;
             $issue->createdAt = Carbon::parse($fetchedIssue['created_at']);
             $issue->createdBy = $owner->id;
             $issue->isPullRequest = ! empty($fetchedIssue['pull_request']);
             $issue->save();
-        }
-        else {
-            $issue->commentCount = $fetchedIssue['comments']??0;
+        } else {
+            $issue->commentCount = $fetchedIssue['comments'] ?? 0;
             $issue->body = $fetchedIssue['body'];
             $issue->save();
         }
@@ -83,14 +74,13 @@ final readonly class IssueService
         $this->getIssueLabels($fetchedIssue, $issue);
         $this->getIssueReactions($fetchedIssue, $issue);
 
-
         return $issue;
     }
 
     private function shouldIncludeIssue(Issue $fetchedIssue): bool
     {
         return ! $fetchedIssue->isPullRequest
-            && $this->includesAtLeastOneLabel($fetchedIssue, (array) config('repos.labels'));
+            && $this->includesAtLeastOneLabel($fetchedIssue, (array) config('filament-issues.labels'));
     }
 
     private function includesAtLeastOneLabel(Issue $fetchedIssue, array $labels): bool
@@ -103,15 +93,15 @@ final readonly class IssueService
     private function getIssueOwner(array $fetchedIssue): IssueOwner
     {
         // Set avatar size to 48px
-        $fetchedIssue['user']['avatar_url'] .= (parse_url($fetchedIssue['user']['avatar_url'], PHP_URL_QUERY) ? '&' : '?').'s=48';
+        $fetchedIssue['user']['avatar_url'] .= (parse_url($fetchedIssue['user']['avatar_url'], PHP_URL_QUERY) ? '&' : '?') . 's=48';
 
         $owner = IssueOwner::query()
             ->where('name', $fetchedIssue['user']['login'])
             ->where('url', $fetchedIssue['user']['html_url'])
             ->first();
 
-        if(!$owner){
-            $owner = new IssueOwner();
+        if (! $owner) {
+            $owner = new IssueOwner;
             $owner->name = $fetchedIssue['user']['login'];
             $owner->url = $fetchedIssue['user']['html_url'];
             $owner->profilePictureUrl = $fetchedIssue['user']['avatar_url'];
@@ -123,17 +113,17 @@ final readonly class IssueService
 
     private function getIssueLabels(array $fetchedIssue, Issue $issue): array
     {
-        $labels =  collect($fetchedIssue['labels'])
+        $labels = collect($fetchedIssue['labels'])
             ->map(function (array $label): Label {
                 $checkLabel = Label::query()
                     ->where('name', $label['name'])
-                    ->where('color', '#'.$label['color'])
+                    ->where('color', '#' . $label['color'])
                     ->first();
 
-                if(!$checkLabel){
-                    $checkLabel = new Label();
+                if (! $checkLabel) {
+                    $checkLabel = new Label;
                     $checkLabel->name = $label['name'];
-                    $checkLabel->color = '#'.$label['color'];
+                    $checkLabel->color = '#' . $label['color'];
                     $checkLabel->save();
                 }
 
@@ -158,14 +148,14 @@ final readonly class IssueService
                     ->where('emoji', $emojis[$content])
                     ->first();
 
-                if(!$reaction){
-                    $reaction = new Reaction();
+                if (! $reaction) {
+                    $reaction = new Reaction;
                     $reaction->content = $content;
                     $reaction->emoji = $emojis[$content];
                     $reaction->save();
                 }
 
-                $issue->reactions()->attach($reaction->id, ['count' => $count]);
+                $issue->reactions()->syncWithoutDetaching([$reaction->id => ['count' => $count]]);
 
                 return $reaction;
             })
@@ -185,7 +175,7 @@ final readonly class IssueService
 
         $result = app(GitHub::class)
             ->client()
-            ->get('repos/'.$repo->repo.'/issues');
+            ->get('repos/' . $repo->repo . '/issues');
 
         if (! $result->successful()) {
             return $this->handleUnsuccessfulIssueRequest($result, $repo->repo);
@@ -212,7 +202,7 @@ final readonly class IssueService
 
     private function handleNotFoundResponse(string $fullRepoName): array
     {
-        report($fullRepoName.' is not a valid GitHub repo.');
+        report($fullRepoName . ' is not a valid GitHub repo.');
 
         return [];
     }
@@ -226,7 +216,7 @@ final readonly class IssueService
             throw new GitHubRateLimitException('GitHub API rate limit reached!');
         }
 
-        report($fullRepoName.' is a forbidden GitHub repo.');
+        report($fullRepoName . ' is a forbidden GitHub repo.');
 
         return [];
     }

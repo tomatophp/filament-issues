@@ -4,6 +4,6 @@ declare(strict_types=1);
 
 namespace TomatoPHP\FilamentIssues\Exceptions;
 
-final class GitHubRateLimitException extends \Exception
-{
-}
+use Exception;
+
+final class GitHubRateLimitException extends Exception {}

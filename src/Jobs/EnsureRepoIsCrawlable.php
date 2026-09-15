@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace TomatoPHP\FilamentIssues\Jobs;
 
-use TomatoPHP\FilamentIssues\Exceptions\GitHubRateLimitException;
-use TomatoPHP\FilamentIssues\Models\Repository;
-use TomatoPHP\FilamentIssues\Exceptions\RepoNotCrawlableException;
-use TomatoPHP\FilamentIssues\Services\RepoService;
 use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,6 +11,10 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Collection;
+use TomatoPHP\FilamentIssues\Exceptions\GitHubRateLimitException;
+use TomatoPHP\FilamentIssues\Exceptions\RepoNotCrawlableException;
+use TomatoPHP\FilamentIssues\Models\Repository;
+use TomatoPHP\FilamentIssues\Services\RepoService;
 
 final class EnsureRepoIsCrawlable implements ShouldQueue
 {
@@ -33,8 +33,6 @@ final class EnsureRepoIsCrawlable implements ShouldQueue
     }
 
     /**
-     * @param RepoService $repoService
-     * @return void
      * @throws GitHubRateLimitException
      */
     public function handle(RepoService $repoService): void

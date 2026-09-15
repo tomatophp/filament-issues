@@ -5,7 +5,7 @@
             <div class="flex flex-col md:flex-row gap-4 md:justify-between w-full">
                 <div class="flex items-center gap-4">
                     <div>
-                        <label class="sr-only" for="search"> {{ trans('cms::messages.filters.search') }} </label>
+                        <label class="sr-only" for="search"> {{ trans('filament-issues::messages.filters.search') }} </label>
                         <div class="relative group">
                       <span class="absolute inset-y-0 left-0 flex items-center justify-center w-10 h-10 text-slate-400 transition pointer-events-none group-focus-within:text-primary-600">
                         <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
@@ -15,7 +15,7 @@
                             <input
                                 id="search"
                                 value="{{ request()->get('search') }}"
-                                placeholder="{{ trans('cms::messages.filters.search-placeholder') }}"
+                                placeholder="{{ trans('filament-issues::messages.filters.search-placeholder') }}"
                                 name="search"
                                 type="search"
                                 class="block h-10 ltr:pl-8 placeholder-slate-400 dark:bg-slate-900 dark:border-slate-700 transition duration-75 border-slate-300 rounded-lg shadow-sm focus:border-primary-600 focus:ring-1 focus:ring-inset focus:ring-primary-600">
@@ -23,30 +23,30 @@
                     </div>
                 </div>
                 <div>
-                    <label class="sr-only" for="sort"> {{ trans('cms::messages.filters.sort') }} </label>
+                    <label class="sr-only" for="sort"> {{ trans('filament-issues::messages.filters.sort') }} </label>
                     <select id="sort" name="sort" class="dark:bg-slate-900 dark:border-slate-700  dark:text-slate-200 text-slate-900 h-10 rtl:pr-4 rtl:pl-8 pl-4 pr-8 transition duration-75 border-slate-300 rounded-lg shadow-sm focus:border-primary-600 focus:ring-1 focus:ring-inset focus:ring-primary-600">
                         @if(request()->has('sort'))
                             @if(request()->get('sort') === 'popular')
-                                <option value="popular" selected>{{ trans('cms::messages.filters.sort-select.popular') }}</option>
+                                <option value="popular" selected>{{ trans('filament-issues::messages.filters.sort-select.popular') }}</option>
                             @else
-                                <option value="popular">{{ trans('cms::messages.filters.sort-select.popular') }}</option>
+                                <option value="popular">{{ trans('filament-issues::messages.filters.sort-select.popular') }}</option>
                             @endif
 
                             @if(request()->get('sort') === 'recent')
-                                <option value="recent" selected>{{ trans('cms::messages.filters.sort-select.recent') }}</option>
+                                <option value="recent" selected>{{ trans('filament-issues::messages.filters.sort-select.recent') }}</option>
                             @else
-                                <option value="recent">{{ trans('cms::messages.filters.sort-select.recent') }}</option>
+                                <option value="recent">{{ trans('filament-issues::messages.filters.sort-select.recent') }}</option>
                             @endif
 
                             @if(request()->get('sort') === 'alphabetical')
-                                <option value="alphabetical" selected>{{ trans('cms::messages.filters.sort-select.alphabetical') }}</option>
+                                <option value="alphabetical" selected>{{ trans('filament-issues::messages.filters.sort-select.alphabetical') }}</option>
                             @else
-                                <option value="alphabetical">{{ trans('cms::messages.filters.sort-select.alphabetical') }}</option>
+                                <option value="alphabetical">{{ trans('filament-issues::messages.filters.sort-select.alphabetical') }}</option>
                             @endif
                         @else
-                            <option value="popular" selected>{{ trans('cms::messages.filters.sort-select.popular') }}</option>
-                            <option value="recent">{{ trans('cms::messages.filters.sort-select.recent') }}</option>
-                            <option value="alphabetical">{{ trans('cms::messages.filters.sort-select.alphabetical') }}</option>
+                            <option value="popular" selected>{{ trans('filament-issues::messages.filters.sort-select.popular') }}</option>
+                            <option value="recent">{{ trans('filament-issues::messages.filters.sort-select.recent') }}</option>
+                            <option value="alphabetical">{{ trans('filament-issues::messages.filters.sort-select.alphabetical') }}</option>
                         @endif
 
                     </select>

@@ -6,7 +6,6 @@ namespace TomatoPHP\FilamentIssues\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Livewire\Wireable;
 
 class IssueOwner extends Model
 {
@@ -18,9 +17,6 @@ class IssueOwner extends Model
         'profilePictureUrl',
     ];
 
-    /**
-     * @return HasMany
-     */
     public function issues(): HasMany
     {
         return $this->hasMany(Issue::class);
@@ -46,6 +42,6 @@ class IssueOwner extends Model
 
     public static function fromArray(array $ownerDetails): self
     {
-        return new self(...$ownerDetails);
+        return new self($ownerDetails);
     }
 }

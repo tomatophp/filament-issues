@@ -34,7 +34,7 @@ return [
         'bug',
         'help wanted',
         'enhancement',
-        'documentation'
+        'documentation',
     ],
 
     /*

@@ -4,50 +4,64 @@ declare(strict_types=1);
 
 namespace TomatoPHP\FilamentIssues\Services;
 
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Collection;
 use TomatoPHP\FilamentIssues\Clients\GitHub;
-use TomatoPHP\FilamentIssues\DataTransferObjects\Repository;
 use TomatoPHP\FilamentIssues\Exceptions\GitHubRateLimitException;
 use TomatoPHP\FilamentIssues\Exceptions\RepoNotCrawlableException;
-use Illuminate\Http\Client\Response;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use TomatoPHP\FilamentIssues\Facades\FilamentIssues;
 use TomatoPHP\FilamentIssues\Models\Org;
+use TomatoPHP\FilamentIssues\Models\Repository;
 
 final readonly class RepoService
 {
+    /**
+     * Every configured, registered and organization repository, created in the database once.
+     *
+     * @return Collection<int, Repository>
+     */
     public function reposToCrawl(): Collection
     {
-        return collect(array_merge(config('filament-issues.repos'), FilamentIssues::getRepos()))
-            ->merge($this->fetchReposFromOrgs())
-            ->flatMap(function (array $repoNames, string $owner): Collection {
-                foreach ($repoNames as $repoName){
-                    $org = Org::query()->where('name', $owner)->first();
-                    if(!$org){
-                        $org = Org::query()->create([
-                            'name' => $owner,
-                            'last_update' => now()
-                        ]);
-                    }
+        $repositories = collect();
 
-                    $org = $org->id;
+        foreach ($this->repoNamesByOwner() as $owner => $repoNames) {
+            $org = Org::query()->firstOrCreate(['name' => $owner], ['last_update' => now()]);
 
-                    $repo = \TomatoPHP\FilamentIssues\Models\Repository::query()
-                        ->where('owner_id', $org)
-                        ->where('name', $repoName)
-                        ->exists();
+            foreach (array_unique($repoNames) as $repoName) {
+                $repositories->push(
+                    Repository::query()->firstOrCreate(['owner_id' => $org->id, 'name' => $repoName])
+                );
+            }
+        }
 
-                    if(!$repo){
-                        $repo = new \TomatoPHP\FilamentIssues\Models\Repository();
-                        $repo->owner_id = $org;
-                        $repo->name = $repoName;
-                        $repo->save();
-                    }
+        return $repositories->unique('id')->values();
+    }
+
+    /**
+     * @return array<string, array<int, string>>
+     */
+    public function repoNamesByOwner(): array
+    {
+        $names = [];
+
+        $sources = [
+            (array) config('filament-issues.repos', []),
+            FilamentIssues::getRepos(),
+            $this->fetchReposFromOrgs(),
+        ];
+
+        foreach ($sources as $source) {
+            foreach ($source as $owner => $repoNames) {
+                // Accept both ['owner' => ['repo']] and ['owner/repo'].
+                if (is_int($owner) && is_string($repoNames) && str_contains($repoNames, '/')) {
+                    [$owner, $repoNames] = explode('/', $repoNames, 2);
                 }
 
-                return \TomatoPHP\FilamentIssues\Models\Repository::all();
-            });
+                $names[$owner] = array_values(array_merge($names[$owner] ?? [], (array) $repoNames));
+            }
+        }
+
+        return $names;
     }
 
     /**
@@ -59,9 +73,7 @@ final readonly class RepoService
         $repositoryData = $this->getRepoFromGitHubApi($repository);
 
         if ($this->repoIsArchived($repositoryData)) {
-            throw new RepoNotCrawlableException(
-                "Repository {$repository->owner}/{$repository->name} is archived."
-            );
+            throw new RepoNotCrawlableException("Repository {$repository->repo} is archived.");
         }
     }
 
@@ -76,14 +88,14 @@ final readonly class RepoService
      */
     private function getRepoFromGitHubApi(Repository $repo): array
     {
-        $fullRepoName = $repo->owner.'/'.$repo->name;
+        $fullRepoName = $repo->repo;
 
         $result = app(GitHub::class)
             ->client()
-            ->get('repos/'.$fullRepoName);
+            ->get('repos/' . $fullRepoName);
 
         if (! $result->successful()) {
-            $this->handleUnsuccessfulIssueRequest($result, $fullRepoName);
+            $this->handleUnsuccessfulRequest($result, $fullRepoName);
         }
 
         return $result->json();
@@ -93,21 +105,13 @@ final readonly class RepoService
      * @throws GitHubRateLimitException
      * @throws RepoNotCrawlableException
      */
-    private function handleUnsuccessfulIssueRequest(Response $response, string $fullRepoName): void
+    private function handleUnsuccessfulRequest(Response $response, string $fullRepoName): void
     {
         match ($response->status()) {
-            404 => $this->handleNotFoundResponse($fullRepoName),
+            404 => throw new RepoNotCrawlableException($fullRepoName . ' is not a valid GitHub repo.'),
             403 => $this->handleForbiddenResponse($response, $fullRepoName),
-            default => throw new RepoNotCrawlableException('Unknown error for repo '.$fullRepoName),
+            default => throw new RepoNotCrawlableException('Unknown error for repo ' . $fullRepoName),
         };
-    }
-
-    /**
-     * @throws RepoNotCrawlableException
-     */
-    private function handleNotFoundResponse(string $fullRepoName): void
-    {
-        throw new RepoNotCrawlableException($fullRepoName.' is not a valid GitHub repo.');
     }
 
     /**
@@ -120,51 +124,52 @@ final readonly class RepoService
             throw new GitHubRateLimitException('GitHub API rate limit reached!');
         }
 
-        throw new RepoNotCrawlableException($fullRepoName.' is a forbidden GitHub repo.');
-    }
-
-    private function fetchReposFromOrgs(): Collection
-    {
-        return collect(config('filament-issues.orgs'))
-            ->mapWithKeys(fn (string $org): array => [$org => $this->fetchReposFromOrg($org)]);
+        throw new RepoNotCrawlableException($fullRepoName . ' is a forbidden GitHub repo.');
     }
 
     /**
-     * Fetch all the crawlable repos for a GitHub organization.
+     * @return array<string, array<int, string>>
      */
-    private function fetchReposFromOrg(string $org): ?array
+    private function fetchReposFromOrgs(): array
     {
-        $checkExistsOrg = Org::query()->where('name', $org)->exists();
-        if(!$checkExistsOrg){
-            $owner = Org::query()->create([
-                'name' => $org,
-                'last_update' => now()
-            ]);
+        return collect((array) config('filament-issues.orgs', []))
+            ->mapWithKeys(fn (string $org): array => [$org => $this->fetchReposFromOrg($org)])
+            ->all();
+    }
 
-            $client = app(GitHub::class)->client();
-            $page = 1;
+    /**
+     * Fetch the crawlable (not archived) repos of a GitHub organization.
+     * Stops at the first empty or unsuccessful page, so an unknown organization
+     * or a rate limited token can never loop forever.
+     *
+     * @return array<int, string>
+     */
+    private function fetchReposFromOrg(string $org): array
+    {
+        $existing = Org::query()->where('name', $org)->first();
 
-            $repos = collect();
+        if ($existing) {
+            return $existing->repositories()->pluck('name')->all();
+        }
 
-            while ($result = $client->get("orgs/{$org}/repos", ['per_page' => 100, 'type' => 'sources', 'page' => $page])->json()) {
-                $repoNames = collect($result)
-                    ->reject(function (array $repo) use ($owner){
-                        return ($this->repoIsArchived($repo) || \TomatoPHP\FilamentIssues\Models\Repository::query()
-                                ->where('owner_id', $owner->id)
-                                ->where('name', $repo['name'])
-                                ->exists());
-                    })
-                    ->pluck('name');
+        $client = app(GitHub::class)->client();
+        $repos = [];
 
-                $repos->push(...$repoNames);
+        for ($page = 1; $page <= 50; $page++) {
+            $response = $client->get("orgs/{$org}/repos", ['per_page' => 100, 'type' => 'sources', 'page' => $page]);
+            $result = $response->json();
 
-                $page++;
+            if (! $response->successful() || ! is_array($result) || ! array_is_list($result) || $result === []) {
+                break;
             }
 
-            return $repos->all();
+            foreach ($result as $repo) {
+                if (is_array($repo) && isset($repo['name']) && ! $this->repoIsArchived($repo)) {
+                    $repos[] = $repo['name'];
+                }
+            }
         }
-        else {
-            return Org::query()->where('name', $org)->first()?->repositories->pluck('name')->toArray();
-        }
+
+        return $repos;
     }
 }

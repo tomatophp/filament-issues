@@ -2,13 +2,11 @@
 
 namespace TomatoPHP\FilamentIssues\Filament\Resources\IssueResource\Pages;
 
-use Filament\Actions;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
-use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Pages\ManageRecords;
 use TomatoPHP\FilamentIssues\Facades\FilamentIssues;
 use TomatoPHP\FilamentIssues\Filament\Resources\IssueResource;
-use TomatoPHP\FilamentIssues\Models\Issue;
 
 class ListIssues extends ManageRecords
 {
@@ -21,11 +19,11 @@ class ListIssues extends ManageRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\Action::make('refresh')
+            Action::make('refresh')
                 ->label(trans('filament-issues::messages.actions.refresh.label'))
                 ->requiresConfirmation()
                 ->icon('heroicon-o-arrow-down-circle')
-                ->action(function (){
+                ->action(function () {
                     FilamentIssues::refresh();
 
                     Notification::make()
@@ -35,12 +33,12 @@ class ListIssues extends ManageRecords
                         ->success()
                         ->send();
                 }),
-            Actions\Action::make('clean')
+            Action::make('clean')
                 ->label(trans('filament-issues::messages.actions.clean.label'))
                 ->requiresConfirmation()
                 ->icon('heroicon-o-trash')
                 ->color('danger')
-                ->action(function (){
+                ->action(function () {
                     FilamentIssues::clear();
 
                     Notification::make()

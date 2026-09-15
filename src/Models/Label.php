@@ -6,7 +6,6 @@ namespace TomatoPHP\FilamentIssues\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
-use Livewire\Wireable;
 
 class Label extends Model
 {
@@ -35,7 +34,7 @@ class Label extends Model
 
     public static function fromArray(array $label): self
     {
-        return new self(...$label);
+        return new self($label);
     }
 
     public static function multipleFromArray(array $labels): array

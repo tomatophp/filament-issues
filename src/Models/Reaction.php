@@ -4,7 +4,6 @@ namespace TomatoPHP\FilamentIssues\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
-use Livewire\Wireable;
 
 class Reaction extends Model
 {
@@ -36,7 +35,7 @@ class Reaction extends Model
 
     public static function fromArray(array $reaction): self
     {
-        return new self(...$reaction);
+        return new self($reaction);
     }
 
     public static function multipleFromArray(array $labels): array

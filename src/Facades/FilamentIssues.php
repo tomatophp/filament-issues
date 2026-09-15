@@ -2,23 +2,24 @@
 
 namespace TomatoPHP\FilamentIssues\Facades;
 
+use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Facade;
 use TomatoPHP\FilamentIssues\Models\Repository;
+use TomatoPHP\FilamentIssues\Services\IssueService;
 use TomatoPHP\FilamentIssues\Services\RepoService;
 
 /**
  * @method static RepoService repos()
- * @method static RepoService issues()
+ * @method static IssueService issues()
  * @method static array load()
  * @method static void refresh()
  * @method static array fetchRepo(Repository $repo)
  * @method static Builder publicIssues(Request $request)
- * @method void register(string|array|\Closure $repo)
- * @method array getRepos()
- * @method void clear()
+ * @method static void register(string|array|Closure $repo)
+ * @method static array getRepos()
+ * @method static void clear()
  */
 class FilamentIssues extends Facade
 {

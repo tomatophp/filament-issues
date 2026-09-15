@@ -37,9 +37,18 @@ Manage your GitHub issues from your FilamentPHP panel and share issues with othe
 
 ## Screenshots
 
-![Issues Dashboard](https://raw.githubusercontent.com/tomatophp/filament-issues/master/arts/issues.png)
-![Issues Filters](https://raw.githubusercontent.com/tomatophp/filament-issues/master/arts/issues-filters.png)
-![Issues Component](https://raw.githubusercontent.com/tomatophp/filament-issues/master/arts/issues-component.png)
+| Light | Dark |
+|-------|------|
+| ![Issues](https://raw.githubusercontent.com/tomatophp/filament-issues/master/arts/issues-light.png) | ![Issues](https://raw.githubusercontent.com/tomatophp/filament-issues/master/arts/issues-dark.png) |
+
+## Requirements
+
+| Package version | Filament | Laravel     | PHP  |
+|-----------------|----------|-------------|------|
+| 5.x             | 5.x      | 12.x, 13.x  | 8.2+ |
+| 1.x             | 3.x      | 10.x, 11.x  | 8.1+ |
+
+The Filament v3 line continues on the [`v3`](https://github.com/tomatophp/filament-issues/tree/v3) branch.
 
 ## Installation
 
@@ -88,10 +97,14 @@ return [
     | List of repositories to search for issues.
     |
     */
-    'repos' => [],
+    'repos' => [
+        'tomatophp' => ['filament-issues', 'filament-cms'],
+    ],
 
 ]
 ```
+
+`repos` is keyed by the GitHub owner. Every repository is fetched once, even when it is also registered from a service provider or found through `orgs`.
 
 now on your `services.php` config add this
 
@@ -128,7 +141,7 @@ you can use this Issues on public by just use this component
 or you can use direct issue card by use this component
 
 ```html
-<x-filament-issues-card :issue="$issue" />
+<x-filament-issue-card :issue="$issue" />
 ```
 
 ## Refresh Your issues 
@@ -201,6 +214,14 @@ you can publish migrations file by use this command
 
 ```bash
 php artisan vendor:publish --tag="filament-issues-migrations"
+```
+
+## Testing
+
+The suite fakes every GitHub API call:
+
+```bash
+composer test
 ```
 
 ## Other Filament Packages
