@@ -2,6 +2,12 @@
     "name": "tomatophp/filament-issues",
     "type": "library",
     "description": "Manage your github issues from your FilamentPHP panel and share issues with others",
+    "homepage": "https://tomatophp.com/en/plugins/filament-issues",
+    "support": {
+        "issues": "https://github.com/tomatophp/filament-issues/issues",
+        "source": "https://github.com/tomatophp/filament-issues",
+        "docs": "https://tomatophp.com/en/plugins/filament-issues"
+    },
     "keywords": [
         "php",
         "laravel",
